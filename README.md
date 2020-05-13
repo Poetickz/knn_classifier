@@ -11,6 +11,8 @@ KNN is a non-parametric supervised learning that can be used for both classifica
 In the context of classification, KNN can be definided as:
 Given a positive integer K and a test observation x0, the KNN classifier first identify the K points
 in the training data that are closest to x0.
+
+ 
 ![](./images/knn_image.png)
 
 ## About the data set
