@@ -112,7 +112,7 @@ class Knn(object):
         # Evaluate x_testing
         for x,y,x_testing_data_unscaled in zip(self.x_testing_data, self.y_testing_data, self.x_testing_data_unscaled):
             prediction, zero, one = self.predict(x)
-            self.__print_unscaled_result(x_testing_data_unscaled, zero, one)
+            self.__print_unscaled_result(x_testing_data_unscaled, one, zero)
             if(prediction == 1 and y == 1):
                 tp += 1
             if(prediction == 0 and y == 0):
@@ -240,7 +240,7 @@ class Knn(object):
             print(x, y)
         print("\n\n\n")
     
-    def __print_unscaled_result(self, x_testing_data_unscaled, zero, one):
+    def __print_unscaled_result(self, x_testing_data_unscaled, one, zero):
         """ prints x_testing_data_unscaled, Prob. Diabetes and Prob. No Diabetes  """
         """
         INPUT: x_testing_data_unscaled: numpy array, zero: float prob, one float prob
@@ -248,7 +248,7 @@ class Knn(object):
         """
         for characteristic in x_testing_data_unscaled:
             print(round(characteristic, 3), end="\t\t")
-        print(str(zero)+"\t"+str(one))
+        print(str(one)+"\t"+str(zero))
 
     def __print_perfomance_metrics(self, tp, tn, fp, fn):
         """ Display confusion matrix and performance metrics"""
