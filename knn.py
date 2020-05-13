@@ -47,7 +47,7 @@ class Knn(object):
             training_data = self.__data_frame(file)
 
         except IOError:
-            print("Error: El archivo no existe")
+            print("Error: El archivo no existe o verifique la dirección path.")
             exit(0)
 
         # Gets rows and columns
