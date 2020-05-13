@@ -9,15 +9,15 @@
 
 import numpy as np
 import pandas as pd
-from collections import OrderedDict 
 
 
 class Knn(object):
-    def __init__(self, file, k):
+    def __init__(self, file, k=3):
         self.x_data = None
         self.y_data = None
         self.x_testing_data = None
         self.y_testing_data = None
+        self.x_testing_data_unscaled = None
         self.k = k
         self.mean = []
         self.std = []
@@ -38,7 +38,7 @@ class Knn(object):
         n_rows, n_columns = training_data.shape
 
         # Gets the testing set
-        self.x_testing_data = pd.DataFrame.to_numpy(training_data.iloc[:int(n_rows*.05),0:n_columns-1])
+        self.x_testing_data = self.x_testing_data_unscaled = pd.DataFrame.to_numpy(training_data.iloc[:int(n_rows*.05),0:n_columns-1])
         self.y_testing_data = pd.DataFrame.to_numpy(training_data.iloc[:int(n_rows*0.05),-1]).reshape(int(n_rows*0.05),1)
 
         # Gets the training set
@@ -46,13 +46,10 @@ class Knn(object):
 
         self.y_data = pd.DataFrame.to_numpy(training_data.iloc[int(n_rows*0.05):,-1]).reshape((n_rows-int(n_rows*0.05)),1)
 
-        self.__print_data_set(self.x_data, self.y_data, "Training Dataset Set")
-
         self.x_data = self.__feature_scaling(self.x_data, "training")
 
         self.x_testing_data = self.__feature_scaling(self.x_testing_data, "testing")
 
-        self.__print_data_set(self.x_data, self.y_data, "Training Scaled Dataset Set")
 
     def predict(self, x0):
         N = self.x_data.shape[0]
@@ -63,19 +60,20 @@ class Knn(object):
 
         distances = sorted(distances.items(), key = lambda kv:(kv[1], kv[0]))
 
-        return self.__compute_conditional_probabilities()
+        return self.__compute_conditional_probabilities(distances)
 
-    def evaluate_testing(self):
+    def get_confusion_matrix(self):
         # Initiate variables to the confusion matrix
         tp = 0
         tn = 0
         fp = 0
         fn = 0
-        
+        print("Testing point (features)")
+        print("Pregnancies\tGlucose\t\tBloodPressure\tSkinThickness\tInsulin\t\tBMI\tDiabetes.Ped.Fun.\tAge\tPb. Diabetes\tPb.NO Diabetes")
         # Evaluate x_testing
-        for x,y in zip(self.x_testing_data, self.y_testing_data):
-            prediction = self.predict(x)
-
+        for x,y,x_testing_data_unscaled in zip(self.x_testing_data, self.y_testing_data, self.x_testing_data_unscaled):
+            prediction, zero, one = self.predict(x)
+            self.__print_unscaled_result(x_testing_data_unscaled, zero, one)
             if(prediction == 1 and y == 1):
                 tp += 1
             if(prediction == 0 and y == 0):
@@ -88,7 +86,9 @@ class Knn(object):
         self.__print_perfomance_metrics(tp, tn, fp, fn)
 
 
-
+    def set_k(self, k):
+        self.k = k
+        print("Testing K = "+str(k))
 
 
     # Private methods
@@ -155,9 +155,9 @@ class Knn(object):
                 ones += 1
 
         if zeros > ones:
-            return 0
+            return 0, zeros/self.k, ones/self.k
         else:
-            return 1
+            return 1, zeros/self.k, ones/self.k
     # ----------------------------------------------------------------------------
     # Prints methods
     def __print_data_set(self, x_data, y_data, leyend):
@@ -173,6 +173,11 @@ class Knn(object):
         for x,y in zip(x_data, y_data):
             print(x, y)
         print("\n\n\n")
+    
+    def __print_unscaled_result(self, x_testing_data_unscaled, zero, one):
+        for characteristic in x_testing_data_unscaled:
+            print(round(characteristic, 3), end="\t\t")
+        print(str(zero)+"\t"+str(one))
 
     def __print_perfomance_metrics(self, tp, tn, fp, fn):
         """ Display confusion matrix and performance metrics"""
@@ -211,3 +216,4 @@ class Knn(object):
         print("Recall:"+str(recall))
         print("Specifity:"+str(specifity))
         print("F1 Score: " + str(f1))
+        print("\n\n")
