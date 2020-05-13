@@ -9,21 +9,23 @@
 
 import numpy as np
 import pandas as pd
+from collections import OrderedDict 
 
 
 class Knn(object):
-    def __init__(self, file):
+    def __init__(self, file, k):
         self.x_data = None
         self.y_data = None
         self.x_testing_data = None
         self.y_testing_data = None
+        self.k = k
         self.mean = []
         self.std = []
-        self.create_data_set(file)
+        self.load_data(file)
     
 
 
-    def create_data_set(self, file):
+    def load_data(self, file):
         # Opens file
         try:
             training_data = self.__data_frame(file)
@@ -52,9 +54,38 @@ class Knn(object):
 
         self.__print_data_set(self.x_data, self.y_data, "Training Scaled Dataset Set")
 
+    def predict(self, x0):
+        N = self.x_data.shape[0]
+        distances = {}
 
+        for x in range(0, N):
+            distances[x] = self.__compute_euclidean_distance(self.x_data[x]-x0)
 
+        distances = sorted(distances.items(), key = lambda kv:(kv[1], kv[0]))
 
+        return self.__compute_conditional_probabilities()
+
+    def evaluate_testing(self):
+        # Initiate variables to the confusion matrix
+        tp = 0
+        tn = 0
+        fp = 0
+        fn = 0
+        
+        # Evaluate x_testing
+        for x,y in zip(self.x_testing_data, self.y_testing_data):
+            prediction = self.predict(x)
+
+            if(prediction == 1 and y == 1):
+                tp += 1
+            if(prediction == 0 and y == 0):
+                tn += 1
+            if(prediction == 0 and y == 1):
+                fn += 1
+            if(prediction == 1 and y == 0):
+                fp += 1
+        
+        self.__print_perfomance_metrics(tp, tn, fp, fn)
 
 
 
@@ -106,11 +137,27 @@ class Knn(object):
         return np.array(scaled_array).T
 
         
-
-
+    # ----------------------------------------------------------------------------
+    # Prediction Methods
     
+    def __compute_euclidean_distance(self, eval_x):
+        return np.sqrt(np.sum((eval_x)**2))
 
-    
+    def __compute_conditional_probabilities(self, distances):
+        zeros = 0
+        ones = 0
+        for predict in range(0, self.k):
+            element = distances[predict][0]
+            data = self.y_data[element][0]
+            if data == 0:
+                zeros += 1
+            else:
+                ones += 1
+
+        if zeros > ones:
+            return 0
+        else:
+            return 1
     # ----------------------------------------------------------------------------
     # Prints methods
     def __print_data_set(self, x_data, y_data, leyend):
@@ -126,3 +173,41 @@ class Knn(object):
         for x,y in zip(x_data, y_data):
             print(x, y)
         print("\n\n\n")
+
+    def __print_perfomance_metrics(self, tp, tn, fp, fn):
+        """ Display confusion matrix and performance metrics"""
+        """
+        INPUT:  tp: True positive (count)
+                tn = True negative (count)
+                fp = False positive (count)
+                fn = False negative (count)
+        OUTPUT: NONE
+        """
+        #Prints confusion matrix
+        print("\n")
+        print("--"*23)
+        print("Confusion Matrix")
+        print("--"*23)
+        print("\t\t\t\t\t\tActual Class")
+        print("\t\t\t\t\tGranted(1)\tRefused(0)")
+        print("Predicted Class\t\tGranted(1)\tTP: "+str(tp)+"\t\tFP: "+str(fp)+"")
+        print("\t\t\tRefused(0)\tFN: "+str(fn)+"\t\tTN: "+str(tn)+"")
+        print("\n")
+
+        # Calculate accuracy
+        accuracy = (tp+tn)/(tp+tn+fp+fn)
+        # Calculate precision
+        precision = (tp)/(tp+fp)
+        # Calculate recall
+        recall = (tp/(tp+fn))
+        # Calculate specifity
+        specifity = (tn/(tn+fp))
+        # Calculate f1 score
+        f1 = (2.0*((precision*recall)/(precision+recall)))
+
+        # Print performance metrics
+        print("Accuracy:"+str(accuracy))
+        print("Precision:"+str(precision))
+        print("Recall:"+str(recall))
+        print("Specifity:"+str(specifity))
+        print("F1 Score: " + str(f1))
