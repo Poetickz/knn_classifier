@@ -5,13 +5,22 @@
     Institution: Universidad de Monterrey
     Created: Thursday 14th, 2020
 """
-
+# Importing necessary libraries
 import numpy as np
 import pandas as pd
 
-
+# Knn class
 class Knn(object):
     def __init__(self, file, k=3):
+        """
+        INPUT: data set path & K
+        OUTPUT: Knn instance
+        """
+        """
+        Construction Class method. This method set all attributes of the class
+        and call the load_data method.
+        
+        """
         self.x_data = None
         self.y_data = None
         self.x_testing_data = None
@@ -25,6 +34,14 @@ class Knn(object):
 
 
     def load_data(self, file):
+        """ 
+        load data from comma-separated-value (CSV) file and set
+        x_data, y_data, y_testing_data, x_testing_data.
+        """
+        """
+        INPUT: path_and_filename: the csv file name
+        OUTPUT: None
+        """
         # Opens file
         try:
             training_data = self.__data_frame(file)
@@ -40,7 +57,7 @@ class Knn(object):
         self.x_testing_data = self.x_testing_data_unscaled = pd.DataFrame.to_numpy(training_data.iloc[:int(n_rows*.05),0:n_columns-1])
         self.y_testing_data = pd.DataFrame.to_numpy(training_data.iloc[:int(n_rows*0.05),-1]).reshape(int(n_rows*0.05),1)
 
-        # Gets the training set
+        # Set the training set
         self.x_data = pd.DataFrame.to_numpy(training_data.iloc[int(n_rows*0.05):,0:n_columns-1])
 
         self.y_data = pd.DataFrame.to_numpy(training_data.iloc[int(n_rows*0.05):,-1]).reshape((n_rows-int(n_rows*0.05)),1)
@@ -51,24 +68,47 @@ class Knn(object):
 
 
     def predict(self, x0):
+        """ 
+        Method to predict x0 on the training set
+        """
+        """
+        INPUT: x0 Numpy array with the N characteristics
+        OUTPUT: Prediction, Prob. Diabetes, Prob. No Diabetes
+        """
+
+        # Get N samples
         N = self.x_data.shape[0]
+
+        # Set dictonary
         distances = {}
 
+        # Calculate all euclidean distances
         for x in range(0, N):
             distances[x] = self.__compute_euclidean_distance(self.x_data[x]-x0)
 
+        # Sorting distances
         distances = sorted(distances.items(), key = lambda kv:(kv[1], kv[0]))
 
         return self.__compute_conditional_probabilities(distances)
 
+
     def get_confusion_matrix(self):
+        """ 
+        Method to get Testing point features and confusion matrix of the 
+        """
+        """
+        INPUT: None
+        OUTPUT: None
+        """
         # Initiate variables to the confusion matrix
         tp = 0
         tn = 0
         fp = 0
         fn = 0
+
         print("Testing point (features)")
         print("Pregnancies\tGlucose\t\tBloodPressure\tSkinThickness\tInsulin\t\tBMI\tDiabetes.Ped.Fun.\tAge\tPb. Diabetes\tPb.NO Diabetes")
+        
         # Evaluate x_testing
         for x,y,x_testing_data_unscaled in zip(self.x_testing_data, self.y_testing_data, self.x_testing_data_unscaled):
             prediction, zero, one = self.predict(x)
@@ -86,8 +126,16 @@ class Knn(object):
 
 
     def set_k(self, k):
+        """ 
+        Method to set K attribute
+        """
+        """
+        INPUT: k a integer method
+        OUTPUT: None
+        """
         self.k = k
         print("Testing K = "+str(k))
+
 
 
     # Private methods
@@ -118,7 +166,12 @@ class Knn(object):
         return scaling_scores, mean_value, std_value
 
     def __feature_scaling(self, x, data_type):
-        # Applying feature scaling for training set
+        """ Apply feature scaling for the data set """
+        """
+        INPUT: x: numpy array dataset
+               data_type: string 
+        OUTPUT: numpy array 
+        """
         scaled_array = []
 
         if data_type == "training":
@@ -135,14 +188,25 @@ class Knn(object):
 
         return np.array(scaled_array).T
 
-        
+
+
     # ----------------------------------------------------------------------------
     # Prediction Methods
     
     def __compute_euclidean_distance(self, eval_x):
+        """ Apply euclidean distance for an array """
+        """
+        INPUT: eval_x: numpy array dataset
+        OUTPUT: float euclidean distance
+        """
         return np.sqrt(np.sum((eval_x)**2))
 
     def __compute_conditional_probabilities(self, distances):
+        """ Define classification probabilities """
+        """
+        INPUT: distances: dictonary [key: position, value: distance]
+        OUTPUT: Prediction, Prob. Diabetes, Prob. No Diabetes
+        """
         zeros = 0
         ones = 0
         for predict in range(0, self.k):
@@ -157,6 +221,9 @@ class Knn(object):
             return 0, zeros/self.k, ones/self.k
         else:
             return 1, zeros/self.k, ones/self.k
+
+
+
     # ----------------------------------------------------------------------------
     # Prints methods
     def __print_data_set(self, x_data, y_data, leyend):
@@ -174,6 +241,11 @@ class Knn(object):
         print("\n\n\n")
     
     def __print_unscaled_result(self, x_testing_data_unscaled, zero, one):
+        """ prints x_testing_data_unscaled, Prob. Diabetes and Prob. No Diabetes  """
+        """
+        INPUT: x_testing_data_unscaled: numpy array, zero: float prob, one float prob
+        OUTPUT: None
+        """
         for characteristic in x_testing_data_unscaled:
             print(round(characteristic, 3), end="\t\t")
         print(str(zero)+"\t"+str(one))
