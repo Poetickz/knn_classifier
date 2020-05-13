@@ -1,4 +1,4 @@
-# Logistic Classification Practice
+# KNN-Based Classification Practice
 This repo is used for a KNN-Based Classification Practice
 
 ## Credits
