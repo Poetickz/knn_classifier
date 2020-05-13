@@ -1,6 +1,5 @@
 """ Knn.py
-   This is a class to Knn classifier.
-
+   This is a class to make an instance of a Knn classifier.
     Author: Alan Rocha González
     Email: alan.rocha@udem.edu
     Institution: Universidad de Monterrey
